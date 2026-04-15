@@ -1,0 +1,79 @@
+# 智知因 - Docker Compose 生产配置
+version: '3.8'
+
+services:
+  # API后端服务
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zhiyin-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - QWEN_API_KEY=${QWEN_API_KEY}
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-deepseek}
+      - DEBUG=false
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - zhiyin-network
+
+  # Streamlit前端服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: zhiyin-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE=http://api:8000
+      - STREAMLIT_SERVER_MAX_UPLOAD_SIZE=200
+      - STREAMLIT_SERVER_HEADLESS=true
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - zhiyin-network
+
+  # Nginx反向代理（生产环境推荐）
+  nginx:
+    image: nginx:alpine
+    container_name: zhiyin-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+    networks:
+      - zhiyin-network
+
+networks:
+  default:
+    name: zhiyin-network
+    driver: bridge
