@@ -70,14 +70,57 @@
 - 📄 [测试计划与用例](./docs/测试计划与用例.md)
 - 📄 [用户操作手册](./docs/用户操作手册.md)
 
+## 项目结构
+
+```
+智知因/
+├── agent/                 # Agent 核心模块
+│   ├── base.py           # Agent 基类
+│   ├── diagnosis_agent.py # 诊断 Agent
+│   ├── generation_agent.py# 生成 Agent
+│   ├── reflection_agent.py# 反思 Agent
+│   ├── evaluation_agent.py# 评估 Agent
+│   └── coordinator.py    # Agent 协调器
+├── api/                   # FastAPI 接口
+│   ├── routes.py         # API 路由
+│   ├── models.py         # 数据模型
+│   └── llm_client.py     # LLM 客户端
+├── db/                    # 数据库层
+│   ├── database.py       # SQLite 管理
+│   └── vector_store.py   # ChromaDB 管理
+├── 智知因/                  # 完整代码包（含部署脚本）
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── deploy.sh / deploy.bat
+│   └── ...
+└── 📄 文档（需求/设计/测试/手册）
+```
+
 ## 快速开始
 
-### 环境要求
+### 方式一：一键部署（推荐）
 
-- Python 3.10+
-- API Key (DeepSeek / 通义千问)
+**Windows：**
+```bash
+cd 智知因
+.\deploy.bat
+```
 
-### 安装
+**Linux/Mac：**
+```bash
+cd 智知因
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### 方式二：Docker 部署
+
+```bash
+cd 智知因
+docker-compose up -d --build
+```
+
+### 方式三：手动部署
 
 ```bash
 # 克隆仓库
@@ -85,15 +128,37 @@ git clone https://github.com/2510192670-heart/ZhiZhiYin.git
 cd ZhiZhiYin
 
 # 安装依赖
-pip install -r requirements.txt
+pip install -r 智知因/requirements.txt
 
 # 配置环境变量
-cp .env.example .env
+cp 智知因/.env.example 智知因/.env
 # 编辑 .env 填入你的 API Key
 
-# 启动应用
-streamlit run app.py
+# 启动后端
+uvicorn 智知因/api.routes:app --reload --port 8000
+
+# 启动前端（新终端）
+streamlit run 智知因/streamlit_app.py --server.port 8501
 ```
+
+### 访问地址
+
+| 服务 | 地址 |
+|------|------|
+| API 文档 | http://localhost:8000/docs |
+| 前端界面 | http://localhost:8501 |
+
+## 一键部署功能
+
+部署脚本会自动：
+1. 检测 Python 环境
+2. 创建虚拟环境
+3. 安装所有依赖
+4. 创建必要目录
+5. 配置环境变量
+6. 启动服务
+
+支持选择：仅后端 / 仅前端 / 全部 / Docker
 
 ## License
 
