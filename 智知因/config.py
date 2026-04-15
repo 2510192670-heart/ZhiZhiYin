@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "智知因"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
+    LOG_LEVEL: str = "INFO"
 
     # 数据库配置
     DATABASE_URL: str = "sqlite:///./data/zhizhiyin.db"

@@ -11,12 +11,16 @@ from config import settings
 
 def main():
     """主函数"""
-    logger.info(f"启动 {settings.APP_NAME} {settings.APP_VERSION}")
+    import argparse
 
-    # 选择运行模式
-    mode = input("选择运行模式 (1: API / 2: Frontend / 3: All): ").strip()
+    parser = argparse.ArgumentParser(description=settings.APP_NAME)
+    parser.add_argument("--mode", "-m", choices=["api", "frontend", "all"],
+                       default="all", help="运行模式: api(仅API) / frontend(仅前端) / all(全部)")
+    args = parser.parse_args()
 
-    if mode == "1":
+    logger.info(f"启动 {settings.APP_NAME} {settings.APP_VERSION} (模式: {args.mode})")
+
+    if args.mode == "api":
         # 仅启动 API
         uvicorn.run(
             "api.routes:app",
@@ -24,7 +28,7 @@ def main():
             port=8000,
             reload=True,
         )
-    elif mode == "2":
+    elif args.mode == "frontend":
         # 仅启动前端
         import subprocess
         subprocess.run([
@@ -32,7 +36,7 @@ def main():
             "--server.port", "8501",
             "--server.address", "0.0.0.0"
         ])
-    elif mode == "3":
+    else:
         # 全部启动
         import multiprocessing
 
@@ -59,10 +63,11 @@ def main():
         p1.start()
         p2.start()
 
+        logger.info("API: http://localhost:8000")
+        logger.info("前端: http://localhost:8501")
+
         p1.join()
         p2.join()
-    else:
-        logger.error("无效的选择")
 
 
 if __name__ == "__main__":
